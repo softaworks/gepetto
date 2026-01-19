@@ -48,33 +48,25 @@ Result: Clear implementation roadmap, reviewed by multiple LLMs, ready for execu
 
 ## Installation
 
-### Recommended: Universal Installation (Works with all AI agents)
+**Claude Code only** - This skill is designed specifically for Claude Code.
 
-```bash
-npx add-skill softaworks/gepetto
-```
+### Recommended: Plugin Installation
 
-This method works with multiple AI coding agents:
-- ✅ **Claude Code** - Full plugin support
-- ✅ **Codex** - Compatible with skill format
-- ✅ **Cursor** - Works with agent skills
-- ✅ **Other Agent-based tools** - Universal compatibility
-
-### Alternative Methods
-
-**For Claude Code (Plugin)**
 ```bash
 /plugin install gepetto@softaworks
 ```
 
-**For Claude Code (Manual)**
+### Alternative: Manual Installation
+
 ```bash
+npx add-skill softaworks/gepetto
+# or
 cp -r skills/gepetto ~/.claude/skills/
 ```
 
-**For claude.ai**
+### For claude.ai
 
-Add the skill to project knowledge or paste SKILL.md contents into the conversation.
+While not the primary use case, you can add the skill to project knowledge or paste SKILL.md contents into the conversation for basic guidance.
 
 ---
 
