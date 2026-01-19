@@ -359,6 +359,6 @@ If blocked after 10 iterations, document blockers and output <promise>SECTION-01
 
 **Crafted by:** Leonardo Flores
 **License:** MIT
-**Repository:** https://github.com/leonardocouy/gepetto
+**Repository:** https://github.com/softaworks/gepetto
 
 *"When you wish upon a spec..."* ⭐🪵
