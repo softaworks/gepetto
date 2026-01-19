@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Skip if commit message contains [skip ci]
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  validate:
+    name: Validate Plugin Structure
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate marketplace.json
+        run: |
+          echo "Validating marketplace.json..."
+          cat .claude-plugin/marketplace.json | jq .
+
+          # Check required fields
+          jq -e '.name' .claude-plugin/marketplace.json > /dev/null
+          jq -e '.owner' .claude-plugin/marketplace.json > /dev/null
+          jq -e '.plugins' .claude-plugin/marketplace.json > /dev/null
+          jq -e '.version' .claude-plugin/marketplace.json > /dev/null
+
+          echo "✓ marketplace.json is valid"
+
+      - name: Validate plugin.json
+        run: |
+          echo "Validating plugin.json..."
+          cat .claude-plugin/plugin.json | jq . > /dev/null
+
+          # Check required fields
+          jq -e '.name' .claude-plugin/plugin.json > /dev/null
+          jq -e '.version' .claude-plugin/plugin.json > /dev/null
+
+          echo "✓ plugin.json is valid"
+
+      - name: Check plugin structure
+        run: |
+          echo "Checking plugin structure..."
+
+          # Check required directories exist
+          if [ ! -d ".claude-plugin" ]; then
+            echo "✗ Missing .claude-plugin directory"
+            exit 1
+          fi
+
+          # Check README exists
+          if [ ! -f "README.md" ]; then
+            echo "✗ Missing README.md"
+            exit 1
+          fi
+
+          # Check skills directory exists
+          if [ ! -d "skills" ]; then
+            echo "✗ Missing skills directory"
+            exit 1
+          fi
+
+          echo "✓ Plugin structure OK"
+
+      - name: Verify version consistency
+        run: |
+          echo "Checking version consistency..."
+
+          # Get version from plugin.json
+          plugin_version=$(jq -r '.version' .claude-plugin/plugin.json)
+
+          # Get version from marketplace.json for this plugin
+          marketplace_version=$(jq -r '.plugins[0].version' .claude-plugin/marketplace.json)
+
+          if [ "$plugin_version" != "$marketplace_version" ]; then
+            echo "✗ Version mismatch: plugin.json=$plugin_version, marketplace.json=$marketplace_version"
+            exit 1
+          fi
+
+          echo "✓ Version $plugin_version is consistent"
