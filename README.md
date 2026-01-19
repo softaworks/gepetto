@@ -34,6 +34,7 @@ Result: Clear implementation roadmap, reviewed by multiple LLMs, ready for execu
 
 ## Table of Contents
 
+- [Installation](#installation)
 - [Workflow](#workflow)
 - [Quick Start](#quick-start)
 - [When to Use](#when-to-use)
@@ -44,6 +45,38 @@ Result: Clear implementation roadmap, reviewed by multiple LLMs, ready for execu
 - [Implementing the Plan](#implementing-the-plan)
 - [Integration with ralph-loop (Optional)](#integration-with-ralph-loop-optional)
 - [File Structure](#file-structure)
+
+## Installation
+
+### Recommended: Universal Installation (Works with all AI agents)
+
+```bash
+npx add-skill softaworks/gepetto
+```
+
+This method works with multiple AI coding agents:
+- ✅ **Claude Code** - Full plugin support
+- ✅ **Codex** - Compatible with skill format
+- ✅ **Cursor** - Works with agent skills
+- ✅ **Other Agent-based tools** - Universal compatibility
+
+### Alternative Methods
+
+**For Claude Code (Plugin)**
+```bash
+/plugin install gepetto@softaworks
+```
+
+**For Claude Code (Manual)**
+```bash
+cp -r skills/gepetto ~/.claude/skills/
+```
+
+**For claude.ai**
+
+Add the skill to project knowledge or paste SKILL.md contents into the conversation.
+
+---
 
 ## Workflow
 
