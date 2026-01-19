@@ -52,8 +52,14 @@ Result: Clear implementation roadmap, reviewed by multiple LLMs, ready for execu
 
 ### Recommended: Plugin Installation
 
+**Step 1:** Add the marketplace (first time only)
 ```bash
-/plugin install gepetto@softaworks
+/plugin marketplace add softaworks/agent-skills
+```
+
+**Step 2:** Install gepetto
+```bash
+/plugin install gepetto
 ```
 
 ### Alternative: Manual Installation
