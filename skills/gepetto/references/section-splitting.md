@@ -1,6 +1,8 @@
 # Section File Writing
 
-Write individual section files from the plan. This step assumes `sections/index.md` already exists.
+Write individual section files from the plan using **parallel subagents** for efficiency.
+
+This step assumes `sections/index.md` already exists.
 
 ## Input Files
 
@@ -17,28 +19,31 @@ Write individual section files from the plan. This step assumes `sections/index.
 └── ...
 ```
 
-## Writing Loop
+## Parallel Execution Strategy
 
-For each section in the SECTION_MANIFEST:
+**Launch one subagent per section in a single message** for maximum parallelization:
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│  ITERATION LOOP                                     │
+│  PARALLEL SUBAGENT APPROACH                         │
 │                                                     │
-│  1. Parse index.md to get section list              │
+│  1. Parse index.md to get SECTION_MANIFEST list     │
 │  2. Check which sections already exist              │
-│  3. For each missing section:                       │
-│     a. Read claude-plan.md for relevant content     │
-│     b. Write section-NN-name.md                     │
-│     c. Mark TODO complete                           │
-│  4. Continue until all sections written             │
+│  3. Launch ALL missing sections as parallel Tasks:  │
+│                                                     │
+│     Task(prompt="Write section-01-...")             │
+│     Task(prompt="Write section-02-...")             │
+│     Task(prompt="Write section-03-...")             │
+│     ... (all in ONE message)                        │
+│                                                     │
+│  4. Wait for all subagents to complete              │
 │                                                     │
 └─────────────────────────────────────────────────────┘
 ```
 
-### Check Progress
+### Parse SECTION_MANIFEST
 
-Parse the SECTION_MANIFEST from index.md:
+Extract section list from index.md:
 
 ```markdown
 <!-- SECTION_MANIFEST
@@ -48,18 +53,43 @@ section-03-api
 END_MANIFEST -->
 ```
 
-Then check which `section-*.md` files exist in the sections directory.
+### Launch Parallel Tasks
 
-### Write Section Files
+For each section in the manifest, include a Task in a single message:
 
-For each missing section:
+```python
+Task(
+  subagent_type="general-purpose",
+  prompt="""
+  Write section file: section-01-foundation
 
-1. Read `claude-plan.md` and `index.md`
-2. Write `section-NN-<name>.md` with:
-   - Full background context
-   - Requirements for this section
-   - Implementation details
-   - Acceptance criteria
+  Inputs:
+  - <planning_dir>/claude-plan.md
+  - <planning_dir>/sections/index.md
+
+  Output: <planning_dir>/sections/section-01-foundation.md
+
+  Requirements: [see Section File Template below]
+  """
+)
+
+Task(
+  subagent_type="general-purpose",
+  prompt="Write section file: section-02-config ..."
+)
+
+# ... one Task per section
+```
+
+**Why parallel?** Each section is independent - they all read from the same source files (`claude-plan.md`, `index.md`) but write to different output files.
+
+### Resume Handling
+
+If some sections already exist:
+1. Only launch Tasks for MISSING sections
+2. Skip sections that have corresponding `section-*.md` files
+
+## Section File Requirements
 
 **CRITICAL: Each section file must be completely self-contained.**
 
@@ -112,14 +142,8 @@ Include all necessary background, requirements, and implementation details withi
 - `path/to/file2.ts` - {description}
 ```
 
-### Mark Progress
-
-After writing each section file, mark its corresponding TODO as completed via TodoWrite.
-
-### Batching
-
-You can write multiple sections before updating TODOs if that's more efficient. Just make sure to mark them all complete when done.
-
 ## Completion
 
 All sections are complete when every section in the SECTION_MANIFEST has a corresponding `section-NN-name.md` file.
+
+After all parallel Tasks complete, update the main TODO list to mark section writing as done.

@@ -79,9 +79,8 @@ Determine session state by checking existing files:
 | + reviews | resume | Step 11 (integrate) |
 | + integration-notes | resume | Step 12 (user review) |
 | + sections/index.md | resume | Step 14 (write sections) |
-| all sections complete | resume | Step 15 (ralph-loop prompt) |
-| + claude-ralph-loop-prompt.md | resume | Step 16 (ralphy PRD) |
-| + claude-ralphy-prd.md | complete | Done |
+| all sections complete | resume | Step 15 (execution files) |
+| + claude-ralph-loop-prompt.md + claude-ralphy-prd.md | complete | Done |
 
 5. Create TODO list with TodoWrite based on current state
 
@@ -103,7 +102,7 @@ To start fresh, delete the planning directory files.
 
 ```
 ═══════════════════════════════════════════════════════════════
-STEP {N}/18: {STEP_NAME}
+STEP {N}/17: {STEP_NAME}
 ═══════════════════════════════════════════════════════════════
 {details}
 Step {N} complete: {summary}
@@ -213,135 +212,104 @@ Read `claude-plan.md`. Identify natural section boundaries and create `<planning
 
 Write `index.md` before proceeding to section file creation.
 
-### 14. Write Section Files
+### 14. Write Section Files — Parallel Subagents
 
 See [section-splitting.md](references/section-splitting.md)
 
-For each section defined in the manifest:
-1. Read index.md to get section info
-2. Write `section-NN-<name>.md` with implementation details from `claude-plan.md`
-3. Mark TODO complete
-4. Continue until all sections are written
+**Launch parallel subagents** - one Task per section for maximum efficiency:
 
-**IMPORTANT: Each section file must be completely self-contained.** The implementer should NOT need to reference any other document.
+1. First, parse `sections/index.md` to get the SECTION_MANIFEST list
+2. Then launch ALL section Tasks in a single message (parallel execution):
 
-### 15. Generate Ralph-Loop Prompt (Optional Integration)
-
-Create `<planning_dir>/claude-ralph-loop-prompt.md` for optional ralph-loop integration.
-
-**This file embeds all section content inline** so users who want autonomous execution can run a single command:
 ```
-/ralph-loop @<planning_dir>/claude-ralph-loop-prompt.md --completion-promise "COMPLETE" --max-iterations 100
-```
+# Launch all in ONE message for parallel execution:
 
-**File structure:**
-```markdown
-You are implementing a feature based on a spec-forge plan.
+Task(
+  subagent_type="general-purpose",
+  prompt="""
+  Write section file: section-01-{name}
 
-## Your Mission
+  Inputs:
+  - <planning_dir>/claude-plan.md
+  - <planning_dir>/sections/index.md
 
-Read the planning documents and implement ALL sections in dependency order.
+  Output: <planning_dir>/sections/section-01-{name}.md
 
-## Planning Documents
+  The section file must be COMPLETELY SELF-CONTAINED. Include:
+  - Background (why this section exists)
+  - Requirements (what must be true when complete)
+  - Dependencies (requires/blocks)
+  - Implementation details (from the plan)
+  - Acceptance criteria (checkboxes)
+  - Files to create/modify
 
-### Section Index (dependencies and order)
+  The implementer should NOT need to reference any other document.
+  """
+)
 
-{EMBED: full content of sections/index.md here}
+Task(
+  subagent_type="general-purpose",
+  prompt="Write section file: section-02-{name} ..."
+)
 
-### Section Files
+Task(
+  subagent_type="general-purpose",
+  prompt="Write section file: section-03-{name} ..."
+)
 
----
-## section-01-name.md
----
-{EMBED: full content of section-01-name.md}
-
----
-## section-02-name.md
----
-{EMBED: full content of section-02-name.md}
-
-{... repeat for all sections ...}
-
-## Execution Rules
-
-1. Read the index.md to understand the dependency graph
-2. Execute sections in the correct order (respect dependencies)
-3. For each section:
-   - Implement all requirements
-   - Verify acceptance criteria are met
-   - Run any tests mentioned
-   - Only move to next section when current is complete
-4. Track progress by creating planning/PROGRESS.md with completed sections
-
-## On Completion
-
-When ALL sections are implemented and verified:
-- Update planning/PROGRESS.md with final status
-- Output <promise>ALL-SECTIONS-COMPLETE</promise>
-
-If blocked on any section after multiple attempts:
-- Document the blocker in planning/PROGRESS.md
-- Output <promise>BLOCKED</promise>
+# ... one Task per section in the manifest
 ```
 
-**Important:** Replace `{EMBED: ...}` placeholders with actual file contents when writing.
+Wait for ALL subagents to complete before proceeding.
 
-### 16. Generate Ralphy PRD (External CLI Integration)
+### 15. Generate Execution Files — Subagent
 
-Create `<planning_dir>/claude-ralphy-prd.md` for integration with [Ralphy](https://github.com/michaelshimeles/ralphy) and similar task-based AI CLI runners.
+**Delegate to subagent** to reduce main context token usage:
 
-Unlike ralph-loop (which embeds everything in a single prompt), Ralphy iterates through a checkbox task list and relies on the AI to read referenced files for context.
+```
+Task(
+  subagent_type="general-purpose",
+  prompt="""
+  Generate two execution files for autonomous implementation.
 
-**File structure:**
+  Input files:
+  - <planning_dir>/sections/index.md (has SECTION_MANIFEST)
+  - <planning_dir>/sections/section-*.md (all section files)
 
-```markdown
-# Implementation PRD
+  OUTPUT 1: <planning_dir>/claude-ralph-loop-prompt.md
+  For ralph-loop plugin. EMBED all section content inline.
 
-This PRD was generated by Gepetto. Each task references a detailed section file.
+  Structure:
+  - Mission statement
+  - Full content of sections/index.md
+  - Full content of EACH section file (embedded, not referenced)
+  - Execution rules (dependency order, verify acceptance criteria)
+  - Completion signal: <promise>ALL-SECTIONS-COMPLETE</promise>
 
-**Before running:** Ensure you're in the project root directory where `sections/` is accessible.
+  OUTPUT 2: <planning_dir>/claude-ralphy-prd.md
+  For Ralphy CLI. REFERENCE section files (don't embed).
 
-## How to Use
+  Structure:
+  - PRD header
+  - How to use (ralphy --prd command)
+  - Context explanation
+  - Checkbox task list: one "- [ ] Section NN: {name}" per section
 
-```bash
-# With Ralphy CLI
-ralphy --prd <planning_dir>/claude-ralphy-prd.md
-
-# Or copy to project root as PRD.md
-cp <planning_dir>/claude-ralphy-prd.md ./PRD.md
-ralphy
+  Write both files.
+  """
+)
 ```
 
-## Context
+Wait for subagent completion before proceeding.
 
-For each task below, read the corresponding section file in `sections/` for:
-- Background and requirements
-- Implementation details
-- Acceptance criteria
-- Files to create/modify
-
-## Tasks
-
-- [ ] Section 01: {section_name} - Read sections/section-01-{name}.md for details
-- [ ] Section 02: {section_name} - Read sections/section-02-{name}.md for details
-- [ ] Section 03: {section_name} - Read sections/section-03-{name}.md for details
-{... one task per section from the SECTION_MANIFEST ...}
-```
-
-**Rules for generating:**
-1. Parse `sections/index.md` to get SECTION_MANIFEST
-2. Create one checkbox task per section
-3. Task description should include the section name and reference the section file
-4. Keep task descriptions concise - the detail is in the section files
-
-### 17. Final Status
+### 16. Final Status
 
 Verify all files were created successfully:
 - All section files from SECTION_MANIFEST
 - `claude-ralph-loop-prompt.md`
 - `claude-ralphy-prd.md`
 
-### 18. Output Summary
+### 17. Output Summary
 
 Print generated files and next steps:
 ```

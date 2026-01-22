@@ -230,9 +230,8 @@ gepetto detects existing files and resumes from where it left off.
 | `+ claude-plan.md` | External review |
 | `+ reviews/` | Feedback integration |
 | `+ sections/index.md` | Section writing |
-| `+ all sections` | Ralph-loop prompt generation |
-| `+ claude-ralph-loop-prompt.md` | Ralphy PRD generation |
-| `+ claude-ralphy-prd.md` | Done |
+| `+ all sections` | Execution files generation |
+| `+ claude-ralph-loop-prompt.md + claude-ralphy-prd.md` | Done |
 
 ## Best Practices
 
