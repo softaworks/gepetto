@@ -4,14 +4,14 @@
     "name": "Leonardo Flores",
     "url": "https://github.com/leonardocouy"
   },
-  "version": "1.0.1",
+  "version": "1.0.2",
   "pluginRoot": ".",
   "plugins": [
     {
       "name": "gepetto",
       "source": ".",
       "description": "AI-assisted spec crafting through research, interviews, and multi-LLM review. Like Geppetto carved Pinocchio from wood, transform rough ideas into living implementation plans.",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "author": {
         "name": "Leonardo Flores",
         "url": "https://github.com/leonardocouy"
